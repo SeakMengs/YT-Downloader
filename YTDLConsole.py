@@ -2,7 +2,7 @@
     Author: @SeakMengs
     Date: 12/5/2022
     Github: https://github.com/SeakMengs
-    This is a console version
+    This is a console version of YT-Downloader
 """
 
 # Import necessary libraries to use in our program
@@ -176,6 +176,10 @@ class YTDLConsole():
             # check if the file already exist or not if exist add 1 to the file name
             videoName = self.validExistedFileName(videoName)
 
+            """ 
+                command explanation:
+                # -i input file, -c copy copy the stream from input file to output file, -map 0:v map the video stream from input file 0 to output file, -map 1:a map the audio stream from input file 1 to output file
+            """
             subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(savePath, videoName)])
             
             os.remove(os.path.join(savePath, video))
