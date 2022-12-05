@@ -9,8 +9,9 @@
 from pytube import YouTube
 import os
 import sys
-import subprocess
 import time
+import ffmpeg
+import moviepy.editor as mp
 
 class YTDLConsole():
 
@@ -137,20 +138,20 @@ class YTDLConsole():
                 )[downloadOptions].download(savePath, filename.replace(".mp4", fileExtension))
 
             # pause the program to wait for user to read the message
-            # time.sleep(2)
+            time.sleep(3)
         
-            # # after download is complete, prompt user to download another video or exit
-            # print("\033c")
-            # print("Download complete!".center(40, "-"))
-            # print("File saved at {}".format(savePath))
-            # print("File name: {}".format(filename))
-            # print("1. Download another video or audio")
-            # print("2. Exit")
-            # choice = int(input("Enter your choice: "))
-            # if choice == 1:
-            #     self.description()
-            # else:
-            #     sys.exit()
+            # after download is complete, prompt user to download another video or exit
+            print("\033c")
+            print("Download complete!".center(40, "-"))
+            print("File saved at {}".format(savePath))
+            print("File name: {}".format(filename))
+            print("1. Download another video or audio")
+            print("2. Exit")
+            choice = int(input("Enter your choice: "))
+            if choice == 1:
+                self.description()
+            else:
+                sys.exit()
 
         except Exception as err:
 
@@ -177,17 +178,23 @@ class YTDLConsole():
     def combineAudioVideo(self, savePath, video, audio):
 
         try:
-            # combine audio and video then remove audio file, keep video file using subprocess
-            subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c", "copy", os.path.join(savePath, video.replace(".mp4", ".mp3"))])
-            # give me a command to install subprocess 
+            videoName = video
+            os.rename(os.path.join(savePath, video), os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
+            # combine audio and video using moviepy library
+            videoStream = mp.VideoFileClip(os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
+            audioStream = mp.AudioFileClip(os.path.join(savePath, audio))
+            videoStream.audio = audioStream
 
-            # delete audio file
-            os.remove(os.path.join(savePath, audio.replace(".mp3", "comb.mp3")))
-
+            videoName = self.validExistedFileName(videoName)
+            # prevent fps error
+            videoStream.write_videofile(os.path.join(savePath, videoName), fps=24, codec="libx264", audio_codec="aac")
             # delete audio after combine
+            os.remove(os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
             os.remove(os.path.join(savePath, audio))
         except Exception as err:
             print("Error: ", err)
+            sys.exit()
+
 
     # function to check print progress when downloading the video or audio
     def progress_Check(self, stream, chunk, bytes_remaining):
