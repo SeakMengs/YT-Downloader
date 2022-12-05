@@ -1,10 +1,17 @@
 from pytube import Playlist
 import os
+import sys
+
+# def progress_Check(stream, chunk, bytes_remaining):
+#     contentSize = stream.filesize
+#     size = contentSize - bytes_remaining
+#     print(f"{int(size/contentSize*100)}% done...")
 
 def progress_Check(stream, chunk, bytes_remaining):
-    contentSize = stream.filesize
-    size = contentSize - bytes_remaining
-    print(f"{int(size/contentSize*100)}% done...")
+    curr = stream.filesize - bytes_remaining
+    done = int(50 * curr / stream.filesize)
+    sys.stdout.write("\r[{}{}]{}%".format('=' * done, ' ' * (50-done), int(curr/stream.filesize*100)) )
+    sys.stdout.flush()
 
 downloadType = "mp4"
 savePath_string = "D:\Meng\Projects\YT-Downloader"

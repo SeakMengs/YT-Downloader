@@ -2,7 +2,7 @@
     Author: @SeakMengs
     Date: 12/4/2022
     Github: https://github.com/SeakMengs
-    This file is a test file for me to understand how to use the pytube library (a little bit messy because I'm still learning) 
+    This file is a test file for me to understand how to use the pytube library
 """
 
 from pytube import YouTube
