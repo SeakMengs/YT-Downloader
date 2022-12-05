@@ -133,7 +133,7 @@ class YTDLConsole():
             print("Download complete!".center(150, "-"))
             print("File saved at {}".format(savePath))
             print("File name: {}".format(filename))
-            print("1. Download another video or audio")
+            print("\n\n1. Download another video or audio")
             print("2. Exit")
 
             choice = int(input("Enter your choice: "))
