@@ -94,3 +94,37 @@ try:
     print('Task Completed!') 
 except Exception as e: 
     print("An Error Occured: ", e)
+
+
+# save function in case I need it
+# def combineAudioVideo(self, savePath, video, audio):
+
+#     # try:
+#     #     videoName = video
+#     #     os.rename(os.path.join(savePath, video), os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
+#     #     # combine audio and video using moviepy library
+#     #     videoStream = mp.VideoFileClip(os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
+#     #     audioStream = mp.AudioFileClip(os.path.join(savePath, audio))
+#     #     videoStream.audio = audioStream
+
+#     #     videoName = self.validExistedFileName(videoName)
+#     #     # prevent fps error
+#     #     # videoStream.write_videofile(os.path.join(savePath, videoName), fps=24, codec="libx264", audio_codec="aac")
+#     #     videoStream.write_videofile(os.path.join(savePath, videoName))
+#     #     # delete audio after combine
+#     #     os.remove(os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
+#     #     os.remove(os.path.join(savePath, audio))
+#     # except Exception as err:
+#     #     print("Error: ", err)
+#     #     sys.exit()
+
+#     # using ffmpeg to combine audio and video method using subprocess to overwrite the video file
+#     try:
+#         videoName = video
+#         videoName = self.validExistedFileName(videoName)
+#         subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(savePath, videoName)])
+#         os.remove(os.path.join(savePath, video))
+#         os.remove(os.path.join(savePath, audio))
+#     except Exception as err:
+#         print("Error: ", err)
+#         sys.exit()
