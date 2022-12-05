@@ -23,8 +23,7 @@ class YTDLConsole():
     def description(self):
         # clear console
         print("\033c")
-        print(
-            "This is a program to download Youtube video and audio written by @SeakMengs")
+        print("This is a program to download Youtube video and audio written by @SeakMengs")
         print("Press Ctrl+C to exit the program".center(76, '-'), end="\n\n")
 
         # self.savePath_string = input("Enter save path: ")
@@ -57,8 +56,7 @@ class YTDLConsole():
     def video(self):
         # object creation using YouTube pass url, and enable progress checktry:
         try:
-            self.ytVideo = YouTube(
-                self.ytUrl_string, on_progress_callback=self.progress_Check)
+            self.ytVideo = YouTube(self.ytUrl_string, on_progress_callback=self.progress_Check)
         except Exception as err:
             print("Error: ", err)
             # if error occurs, ask user to input everything again
@@ -76,8 +74,7 @@ class YTDLConsole():
         # check all available download and sort by highest stream size
         for stream in self.ytVideo.streams.order_by("filesize").desc():
             # convert file size to MB precisely by dividing 1024*1024
-            self.availableDownloadOptions.append([stream.resolution, stream.mime_type, str(
-                round(stream.filesize / 1048576, 2)) + " MB"])
+            self.availableDownloadOptions.append([stream.resolution, stream.mime_type, str(round(stream.filesize / 1048576, 2)) + " MB"])
             print("{}. {}".format(count, self.availableDownloadOptions[count]))
             count += 1
 
@@ -85,16 +82,14 @@ class YTDLConsole():
 
         # set downloadFileName
         self.downloadFileName = self.ytVideo.title + "." + \
-            self.availableDownloadOptions[self.downloadType][1].split("/")[1]
+        self.availableDownloadOptions[self.downloadType][1].split("/")[1]
 
         # validate file name
         self.downloadFileName = self.validFileName(self.downloadFileName)
-        self.downloadFileName = self.validExistedFileName(
-            self.downloadFileName)
+        self.downloadFileName = self.validExistedFileName(self.downloadFileName)
 
         # start download
-        self.startDownload(self.downloadType,
-                           self.savePath_string, self.downloadFileName)
+        self.startDownload(self.downloadType, self.savePath_string, self.downloadFileName)
 
     # function to deal with playlist if we recognize youtube url as a playlist url
     def playlist(self):
@@ -108,12 +103,10 @@ class YTDLConsole():
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.availableDownloadOptions[downloadOptions][1].split("/")[0] == "video":
 
-                self.ytVideo.streams.order_by("filesize").desc(
-                )[downloadOptions].download(savePath, filename)
+                self.ytVideo.streams.order_by("filesize").desc()[downloadOptions].download(savePath, filename)
 
                 # download highest audio and combine it with video for me
-                self.ytVideo.streams.filter(
-                    mime_type="audio/mp4").order_by("abr").desc().first().download(savePath, filename.replace(".mp4", ".mp3"))
+                self.ytVideo.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(savePath, filename.replace(".mp4", ".mp3"))
                 
                 # combine audio and video using ffmpeg python library
                 print("\nsavePath: ", savePath)
@@ -124,18 +117,15 @@ class YTDLConsole():
 
             else:
                 # get file extension by spliting mime_type by '/'
-                fileExtension = self.availableDownloadOptions[downloadOptions][1].split(
-                    "/")[1]
+                fileExtension = self.availableDownloadOptions[downloadOptions][1].split("/")[1]
                 # Since we receive the mine_type as audio/mp4, we need to split it by '/' and get the second part if it is audio/mp4 set fileExtension to mp3
                 if fileExtension == "mp4":
                     fileExtension = "mp3"
 
                 # validate file existence
-                filename = self.validExistedFileName(
-                    filename.replace(".mp4", ".{}".format(fileExtension)))
+                filename = self.validExistedFileName(filename.replace(".mp4", ".{}".format(fileExtension)))
 
-                self.ytVideo.streams.order_by("filesize").desc(
-                )[downloadOptions].download(savePath, filename.replace(".mp4", fileExtension))
+                self.ytVideo.streams.order_by("filesize").desc()[downloadOptions].download(savePath, filename.replace(".mp4", fileExtension))
 
             # pause the program to wait for user to read the message
             time.sleep(3)
@@ -170,8 +160,7 @@ class YTDLConsole():
         if os.path.isfile(os.path.join(self.savePath_string, filename)):
             count = 1
         while os.path.isfile(os.path.join(self.savePath_string, filename)):
-            filename = filename.replace(
-                ".{}".format(filename.split(".")[-1]), "({}).{}".format(count, filename.split(".")[-1]))
+            filename = filename.replace(".{}".format(filename.split(".")[-1]), "({}).{}".format(count, filename.split(".")[-1]))
             count += 1 
         return filename
 
@@ -187,7 +176,8 @@ class YTDLConsole():
 
             videoName = self.validExistedFileName(videoName)
             # prevent fps error
-            videoStream.write_videofile(os.path.join(savePath, videoName), fps=24, codec="libx264", audio_codec="aac")
+            # videoStream.write_videofile(os.path.join(savePath, videoName), fps=24, codec="libx264", audio_codec="aac")
+            videoStream.write_videofile(os.path.join(savePath, videoName))
             # delete audio after combine
             os.remove(os.path.join(savePath, "YTDL-Combine-Temp.{}".format(video.split(".")[-1])))
             os.remove(os.path.join(savePath, audio))
@@ -200,8 +190,7 @@ class YTDLConsole():
     def progress_Check(self, stream, chunk, bytes_remaining):
         self.curr = stream.filesize - bytes_remaining
         self.done = int(50 * self.curr / stream.filesize)
-        sys.stdout.write("\r[{}{}]{}%".format(
-            '=' * self.done, ' ' * (50-self.done), int(self.curr/stream.filesize*100)))
+        sys.stdout.write("\r[{}{}]{}%".format('=' * self.done, ' ' * (50-self.done), int(self.curr/stream.filesize*100)))
         sys.stdout.flush()
 
 
