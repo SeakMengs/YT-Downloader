@@ -54,8 +54,6 @@ class YTDLConsole():
             self.ytVideo = YouTube(self.ytUrl_string, on_progress_callback=self.progress_Check)
         except Exception as err:
             print("Error: ", err)
-            # if error occurs, ask user to input everything again
-            self.description()
 
         # always reset this list to an empty list in order to prevent error when running this function
         self.availableDownloadOptions = []
@@ -63,7 +61,7 @@ class YTDLConsole():
         # clear console
         print("\033c")
         # Format center the text and fill with '-' (it fill 40 characters)
-        print("Available Download".center(150, "-"))
+        print("Available Download".center(100, "-"))
 
         count = 0
         # check all available download and sort by highest stream size and abr
@@ -74,8 +72,11 @@ class YTDLConsole():
             showMp3 = stream.mime_type
             if stream.mime_type == "audio/mp4":
                 showMp3 = "audio/mp3"
-
-            self.availableDownloadOptions.append([stream.resolution, showMp3, str(round(stream.filesize / 1048576, 2)) + " MB"])
+            
+            if showMp3 == "audio/mp3":
+                self.availableDownloadOptions.append([stream.abr, showMp3, str(round(stream.filesize / 1048576, 2)) + " MB"])
+            else:
+                self.availableDownloadOptions.append([stream.resolution, showMp3,"Fps {}".format(stream.fps) , str(round(stream.filesize / 1048576, 2)) + " MB"])
             print("{}. {}".format(count, self.availableDownloadOptions[count]))
             count += 1
 
@@ -105,6 +106,7 @@ class YTDLConsole():
             if self.availableDownloadOptions[downloadOptions][1].split("/")[0] == "video":
 
                 self.ytVideo.streams.filter(file_extension="mp4").order_by("filesize").desc()[downloadOptions].download(savePath, filename)
+                self.videoFps_Int = self.ytVideo.streams.filter(file_extension="mp4").order_by("filesize").desc()[downloadOptions].fps
 
                 # download highest audio and combine it with video for me
                 self.ytVideo.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(savePath, filename.replace(".mp4", ".mp3"))
@@ -130,7 +132,7 @@ class YTDLConsole():
         
             # after download is complete, prompt user to download another video or exit
             print("\033c")
-            print("Download complete!".center(150, "-"))
+            print("Download complete!".center(100, "-"))
             print("File saved at {}".format(savePath))
             print("File name: {}".format(filename))
             print("\n\n1. Download another video or audio")
@@ -143,10 +145,8 @@ class YTDLConsole():
                 sys.exit()
 
         except Exception as err:
-
             print("\nError: ", err)
-            # if error occurs, ask user to input everything again
-
+            
     def validFileName(self, filename):
         # check if downloadFileName contain any special character of file name and replace with '-'
         for char in ['\\', '/', ':', '*', '?', '"', '<', '>', '|']:
@@ -180,13 +180,19 @@ class YTDLConsole():
                 command explanation:
                 # -i input file, -c copy copy the stream from input file to output file, -map 0:v map the video stream from input file 0 to output file, -map 1:a map the audio stream from input file 1 to output file
             """
-            subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(savePath, videoName)])
+            if self.videoFps_Int > 0 and self.videoFps_Int < 300:
+                # subprocess with fps 
+                subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.videoFps_Int), os.path.join(savePath, videoName)])
+            else:
+                # subprocess without fps 
+                subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(savePath, videoName)])
+                
             
             os.remove(os.path.join(savePath, video))
             os.remove(os.path.join(savePath, audio))
 
         except Exception as err:
-            print("Error: ", err)
+            print("\nError: ", err)
             sys.exit()
 
 
