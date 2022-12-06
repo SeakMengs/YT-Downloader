@@ -17,7 +17,29 @@ class YTDLConsole():
 
     # Constructor
     def __init__(self):
+        self.downloadedBefore = False
         self.description()
+    
+    # function to ask user to enter save path
+    def askSavePath(self):
+        if (self.downloadedBefore == True):
+            print("Save path: ", self.savePath_string)
+            print("Do you want to change? (y/n)")
+            changeSavePath = input("Enter: ")
+            print("\n")
+
+            if changeSavePath == "y":
+                self.downloadedBefore = False
+        
+        if (self.downloadedBefore == False):
+            self.savePath_string = input("Enter save path: ")
+
+            # check savePath existence and create if not exist input again
+            while not os.path.exists(self.savePath_string):
+                print("\nSave path does not not exist!")
+                self.savePath_string = input("Enter save path: ")
+
+            self.downloadedBefore = True
 
     # function to describe about the program
     def description(self):
@@ -26,12 +48,7 @@ class YTDLConsole():
         print("This is a program to download Youtube video and audio written by @SeakMengs")
         print("Press Ctrl+C to exit the program".center(76, '-'), end="\n\n")
 
-        self.savePath_string = "D:\Meng\Projects\YT-Downloader\Test"
-        # self.savePath_string = input("Enter save path: ")
-        # check savePath existence and create if not exist input again
-        while not os.path.exists(self.savePath_string):
-            print("\nSave path does not not exist!")
-            self.savePath_string = input("Enter save path: ")
+        self.askSavePath()
 
         self.ytUrl_string = input("Enter url: ")
         # check url is valid or not by checking "youtube.com" in url
