@@ -22,7 +22,7 @@ class YTDLConsole():
     # function to describe about the program
     def description(self):
         # clear console
-        print("\033c")
+        os.system('cls')
         print("This is a program to download Youtube video and audio written by @SeakMengs")
         print("Press Ctrl+C to exit the program".center(76, '-'), end="\n\n")
 
@@ -61,7 +61,7 @@ class YTDLConsole():
         self.availableDownloadOptions = []
 
         # clear console
-        print("\033c")
+        os.system('cls')
         # Format center the text and fill with '-' (it fill 40 characters)
         print("Available Download".center(100, "-"))
 
@@ -104,7 +104,7 @@ class YTDLConsole():
             print("\nError: ", err)
         
         # clear console
-        print("\033c")
+        os.system('cls')
         # Format center the text and fill with '-' (it fill 40 characters)
         print("Download As".center(100, "-"))
         print("1. Video")
@@ -118,16 +118,18 @@ class YTDLConsole():
 
         # set downloadFileName and create a folder to save all playlist videos
         self.playListfolderName = self.ytPlaylist.title
+        
+        # check save path + folder name is exit or not, if not create a new folder, if exist, create a new folder with number
         if not os.path.exists(self.savePath_string + "\\" + self.playListfolderName):
             os.mkdir(self.savePath_string + "\\" + self.playListfolderName)
         else:
-            i = 1
-            os.rmdir(self.savePath_string + "\\" + self.playListfolderName)
-            while os.path.exists(self.savePath_string + "\\" + self.playListfolderName + str(i)):
-                i += 1
-            os.mkdir(self.savePath_string + "\\" + self.playListfolderName + str(i))
-            self.playListfolderName += str(i)
-        
+            count = 1
+            while os.path.exists(self.savePath_string + "\\" + self.playListfolderName + " " + str(count)):
+                count += 1
+            os.mkdir(self.savePath_string + "\\" + self.playListfolderName + " " + str(count))
+            self.playListfolderName = self.playListfolderName + " " + str(count)
+
+
         # start download
         if self.playListDownloadType == "video":
             # download all videos in playlist with highest resolution and with sounds
@@ -135,13 +137,15 @@ class YTDLConsole():
                 print("\nDownloading {}".format(video.title))
                 video.register_on_progress_callback(self.progress_Check)
                 playListVideoName_string = self.validFileName(video.title) + ".mp4"
-                video.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
+                # download
+                video.streams.filter(file_extension="mp4").order_by("resolution").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
         elif self.playListDownloadType == "audio":
             # download all videos in playlist with highest resolution and without sounds
             for video in self.ytPlaylist.videos:
                 video.register_on_progress_callback(self.progress_Check)
                 print("\nDownloading {}".format(video.title))
                 playListVideoName_string = self.validFileName(video.title) + ".mp3"
+                # download
                 video.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
 
 
@@ -149,7 +153,7 @@ class YTDLConsole():
         time.sleep(4)
     
         # after download is complete, prompt user to download another video or exit
-        print("\033c")
+        os.system('cls')
         print("Download complete!".center(100, "-"))
         print("Playlist saved at {}".format(self.savePath_string))
         print("Folder name: {}".format(self.playListfolderName))
@@ -196,7 +200,7 @@ class YTDLConsole():
             time.sleep(2)
         
             # after download is complete, prompt user to download another video or exit
-            print("\033c")
+            os.system('cls')
             print("Download complete!".center(100, "-"))
             print("File saved at {}".format(savePath))
             print("File name: {}".format(filename))
@@ -224,9 +228,9 @@ class YTDLConsole():
         if os.path.isfile(os.path.join(self.savePath_string, filename)):
             count = 1
 
-        while os.path.isfile(os.path.join(self.savePath_string, filename)):
-            filename = filename.replace(".{}".format(filename.split(".")[-1]), "({}).{}".format(count, filename.split(".")[-1]))
-            count += 1 
+            while os.path.isfile(os.path.join(self.savePath_string, filename)):
+                filename = filename.replace(".{}".format(filename.split(".")[-1]), "({}).{}".format(count, filename.split(".")[-1]))
+                count += 1 
 
         return filename
 

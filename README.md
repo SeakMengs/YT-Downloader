@@ -9,3 +9,10 @@ For Linux users run this command after install the requirements (remove ffmpeg.e
 
 rm ffmpeg.exe <br>
 sudo apt install ffmpeg
+
+
+# How to convert python file to exe for console version
+pip install pyinstaller <br>
+<br>
+cd to project folder <br>
+pyinstaller --console -–add-binary ffmpeg.exe;. --onefile -i logo.ico YTDLConsole.py
