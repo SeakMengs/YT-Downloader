@@ -179,7 +179,10 @@ class YTDLConsole():
             """ 
                 command explanation:
                 # -i input file, -c copy copy the stream from input file to output file, -map 0:v map the video stream from input file 0 to output file, -map 1:a map the audio stream from input file 1 to output file
+                # -0:v:0 set the output video stream to 0, -0:a:0 set the output audio stream to 0
+                # -r set the frame rate of the output file to the frame rate of the input file
             """
+            # normally we get the fps, but just for validation in case we get NoneType
             if self.videoFps_Int > 0 and self.videoFps_Int < 300:
                 # subprocess with fps 
                 subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.videoFps_Int), os.path.join(savePath, videoName)])
