@@ -23,6 +23,7 @@ if not os.path.exists(savePath_string + "\\" + folderName):
     os.mkdir(savePath_string + "\\" + folderName)
 else:
     i = 1
+    os.rmdir(savePath_string + "\\" + folderName)
     while os.path.exists(savePath_string + "\\" + folderName + str(i)):
         i += 1
     os.mkdir(savePath_string + "\\" + folderName + str(i))

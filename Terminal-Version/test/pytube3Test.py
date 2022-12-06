@@ -1,13 +1,13 @@
 from pytube import YouTube
 import os 
 
-# yt = YouTube('https://www.youtube.com/watch?v=G9BFbGqOqKk&ab_channel=8KHDRWORLD')
-# print(yt.streams)
+yt = YouTube('https://www.youtube.com/watch?v=G9BFbGqOqKk&ab_channel=8KHDRWORLD')
+print(yt.streams)
 
-# print("\n\n\n")
+print("\n\n\n")
 
-# for stream in yt.streams:
-#     print(stream.resolution)
+for stream in yt.streams:
+    print(stream.resolution)
 
 # count = 0
 # availableDownloadOptions = []
@@ -23,4 +23,6 @@ import os
 #     availableDownloadOptions.append([stream.resolution, showMp3, stream.fps , str(round(stream.filesize / 1048576, 2)) + " MB"])
 #     print("{}. {}".format(count, availableDownloadOptions[count]))
 #     count += 1
-print(os.name)
+# print(os.name)
+
+# https://stackoverflow.com/questions/63533960/how-to-cancel-and-pause-a-download-using-pytube

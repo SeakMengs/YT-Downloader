@@ -7,6 +7,7 @@
 
 # Import necessary libraries to use in our program
 from pytube import YouTube
+from pytube import Playlist
 import os
 import sys
 import time
@@ -25,7 +26,8 @@ class YTDLConsole():
         print("This is a program to download Youtube video and audio written by @SeakMengs")
         print("Press Ctrl+C to exit the program".center(76, '-'), end="\n\n")
 
-        self.savePath_string = input("Enter save path: ")
+        self.savePath_string = "D:\Meng\Projects\YT-Downloader\Test"
+        # self.savePath_string = input("Enter save path: ")
         # check savePath existence and create if not exist input again
         while not os.path.exists(self.savePath_string):
             print("\nSave path does not not exist!")
@@ -33,7 +35,7 @@ class YTDLConsole():
 
         self.ytUrl_string = input("Enter url: ")
         # check url is valid or not by checking "youtube.com" in url
-        while self.ytUrl_string.find("youtube.com/watch") == -1:
+        while self.ytUrl_string.find("youtube.com/watch") == -1 and self.ytUrl_string.find("youtube.com/playlist") == -1:
             print("\nUrl is not valid!")
             self.ytUrl_string = input("Enter url: ")
 
@@ -53,7 +55,7 @@ class YTDLConsole():
         try:
             self.ytVideo = YouTube(self.ytUrl_string, on_progress_callback=self.progress_Check)
         except Exception as err:
-            print("Error: ", err)
+            print("\nError: ", err)
 
         # always reset this list to an empty list in order to prevent error when running this function
         self.availableDownloadOptions = []
@@ -95,7 +97,70 @@ class YTDLConsole():
 
     # function to deal with playlist if we recognize youtube url as a playlist url
     def playlist(self):
-        pass
+        # object creation using Playlist pass url
+        try:
+            self.ytPlaylist = Playlist(self.ytUrl_string)
+        except Exception as err:
+            print("\nError: ", err)
+        
+        # clear console
+        print("\033c")
+        # Format center the text and fill with '-' (it fill 40 characters)
+        print("Download As".center(100, "-"))
+        print("1. Video")
+        print("2. Audio")
+        self.playListDownloadType = int(input("\nEnter the number: "))
+
+        if self.playListDownloadType == 1:
+            self.playListDownloadType = "video"
+        elif self.playListDownloadType == 2:
+            self.playListDownloadType = "audio"
+
+        # set downloadFileName and create a folder to save all playlist videos
+        self.playListfolderName = self.ytPlaylist.title
+        if not os.path.exists(self.savePath_string + "\\" + self.playListfolderName):
+            os.mkdir(self.savePath_string + "\\" + self.playListfolderName)
+        else:
+            i = 1
+            os.rmdir(self.savePath_string + "\\" + self.playListfolderName)
+            while os.path.exists(self.savePath_string + "\\" + self.playListfolderName + str(i)):
+                i += 1
+            os.mkdir(self.savePath_string + "\\" + self.playListfolderName + str(i))
+            self.playListfolderName += str(i)
+        
+        # start download
+        if self.playListDownloadType == "video":
+            # download all videos in playlist with highest resolution and with sounds
+            for video in self.ytPlaylist.videos:
+                print("\nDownloading {}".format(video.title))
+                video.register_on_progress_callback(self.progress_Check)
+                playListVideoName_string = self.validFileName(video.title) + ".mp4"
+                video.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
+        elif self.playListDownloadType == "audio":
+            # download all videos in playlist with highest resolution and without sounds
+            for video in self.ytPlaylist.videos:
+                video.register_on_progress_callback(self.progress_Check)
+                print("\nDownloading {}".format(video.title))
+                playListVideoName_string = self.validFileName(video.title) + ".mp3"
+                video.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
+
+
+                    # pause the program to wait for user to read the message
+        time.sleep(4)
+    
+        # after download is complete, prompt user to download another video or exit
+        print("\033c")
+        print("Download complete!".center(100, "-"))
+        print("Playlist saved at {}".format(self.savePath_string))
+        print("Folder name: {}".format(self.playListfolderName))
+        print("\n\n1. Download another playlist")
+        print("2. Exit")
+
+        choice = int(input("Enter your choice: "))
+        if choice == 1:
+            self.description()
+        else:
+            sys.exit()
 
     def startDownload(self, downloadOptions, savePath, filename):
         try:
@@ -204,7 +269,7 @@ class YTDLConsole():
         self.curr = stream.filesize - bytes_remaining
         self.done = int(50 * self.curr / stream.filesize)
         
-        sys.stdout.write("\r[{}{}]{}%".format('=' * self.done, ' ' * (50-self.done), int(self.curr/stream.filesize*100)))
+        sys.stdout.write("\r[{}{}]{}% {}/{}Mbs".format('=' * self.done, ' ' * (50-self.done), int(self.curr/stream.filesize*100), round(self.curr/1048576, 2), round(stream.filesize/1048576, 2)))
         sys.stdout.flush()
 
 
