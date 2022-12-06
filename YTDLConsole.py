@@ -166,7 +166,7 @@ class YTDLConsole():
                 video.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
 
 
-                    # pause the program to wait for user to read the message
+        # pause the program to wait for user to read the message
         time.sleep(4)
     
         # after download is complete, prompt user to download another video or exit
