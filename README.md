@@ -7,5 +7,5 @@ pip install -r requirements.txt <br>
 If you are not a linux user skip the line below<br>
 For Linux users run this command after install the requirements (remove ffmpeg.exe which is for window os)<br>
 
-rm ffmpeg.exe
+rm ffmpeg.exe <br>
 sudo apt install ffmpeg
