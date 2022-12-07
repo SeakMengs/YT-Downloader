@@ -11,7 +11,8 @@ rm ffmpeg.exe <br>
 sudo apt install ffmpeg
 
 # How to use?
-In order for the command line to work, ffmpeg.exe must be in the same folder with YTDLConsole.exe
+In order for the command line to work, ffmpeg.exe must be in the same folder with YTDLConsole.exe 
+<br>
 download link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/SeakMengs/YT-Downloader/tree/main/YTDL-CommandLine
 <br>
 place downloaded file in one folder and run YTDLConsole.exe
