@@ -1,5 +1,5 @@
 # YT-Downloader
-
+a Python-based YouTube video downloader with a GUI and command-line interface that makes use of Pytube3 and FFMPEG. capable of downloading mp3s, playlists, and high definition videos.
 # Requirement
 cd to project folder and paste the line below to your terminal <br>
 pip install -r requirements.txt <br>
