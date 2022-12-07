@@ -15,4 +15,5 @@ sudo apt install ffmpeg
 pip install pyinstaller <br>
 <br>
 cd to project folder <br>
-pyinstaller --console -–add-binary ffmpeg.exe;. --onefile -i logo.ico YTDLConsole.py
+<!-- pyinstaller --console -–add-binary ffmpeg.exe;. --onefile -i logo.ico YTDLConsole.py -->
+pyinstaller --console --onefile -i logo.ico YTDLConsole.py

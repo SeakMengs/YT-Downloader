@@ -51,8 +51,9 @@ class YTDLConsole():
         self.askSavePath()
 
         self.ytUrl_string = input("Enter url: ")
+        ytUrlList = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
         # check url is valid or not by checking "youtube.com" in url
-        while self.ytUrl_string.find("youtube.com/watch") == -1 and self.ytUrl_string.find("youtube.com/playlist") == -1:
+        while not any(x in self.ytUrl_string for x in ytUrlList):
             print("\nUrl is not valid!")
             self.ytUrl_string = input("Enter url: ")
 
