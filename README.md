@@ -1,5 +1,5 @@
 # YT-Downloader
-
+a Python-based YouTube video downloader with a GUI and command-line interface that makes use of Pytube3 and FFMPEG. capable of downloading mp3s, playlists, and high definition videos.
 # Requirement
 cd to project folder and paste the line below to your terminal <br>
 pip install -r requirements.txt <br>
@@ -11,8 +11,10 @@ rm ffmpeg.exe <br>
 sudo apt install ffmpeg
 
 # How to use?
-In order for the command line to work, ffmpeg.exe must be in the same folder with YTDLConsole.exe
+In order for the command line to work, ffmpeg.exe must be in the same folder with YTDLConsole.exe 
+<br>
 download link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/SeakMengs/YT-Downloader/tree/main/YTDL-CommandLine
+<br>
 place downloaded file in one folder and run YTDLConsole.exe
 
 # How to convert python file to exe for console version
