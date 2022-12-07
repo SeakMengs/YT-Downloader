@@ -10,6 +10,10 @@ For Linux users run this command after install the requirements (remove ffmpeg.e
 rm ffmpeg.exe <br>
 sudo apt install ffmpeg
 
+# How to use?
+In order for the command line to work, ffmpeg.exe must be in the same folder with YTDLConsole.exe
+download link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/SeakMengs/YT-Downloader/tree/main/YTDL-CommandLine
+place downloaded file in one folder and run YTDLConsole.exe
 
 # How to convert python file to exe for console version
 pip install pyinstaller <br>
