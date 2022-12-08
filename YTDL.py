@@ -8,7 +8,7 @@
 from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
-from PIL import Image
+from PIL import Image, ImageTk
 from pytube import YouTube
 from pytube import Playlist
 import os
@@ -80,7 +80,7 @@ class App(ctk.CTk):
         # create home frame
         self.home_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.home_frame.grid(row=0, column=1, sticky="nsew")
-        self.home_frame.grid_columnconfigure(0, weight=2)
+        self.home_frame.grid_columnconfigure(0, weight=1)
         self.home_frame.grid_columnconfigure(1, weight=1)
         self.home_frame.grid_rowconfigure(0, weight=1)
 
@@ -89,20 +89,27 @@ class App(ctk.CTk):
         self.inside_home_mid_frame.grid(row=0, column=0, rowspan=6, sticky="nsew")
         self.inside_home_mid_frame.grid_columnconfigure(0, weight=1)
         self.inside_home_mid_frame.grid_rowconfigure(0, weight=1)
+        # * testing
         self.video_thumbnail_label = ctk.CTkLabel(self.inside_home_mid_frame, text_color=("gray10", "gray90"),
-                                                text="Youtube Thumbnail", font=ctk.CTkFont(weight="bold", size=15), compound="left")
-        self.video_thumbnail_label.grid(row=0, column=0, columnspan=3, pady=20, sticky="nsew")
+                                                text="", font=ctk.CTkFont(weight="bold", size=15), compound="left", fg_color="transparent", anchor="center")
+        self.video_thumbnail_label.grid(row=0, column=0, columnspan=3, pady=(20, 10), sticky="nsew")
         self.choose_path_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Save path")
         self.choose_path_entry.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
+        self.choose_path_entry.bind("<KeyRelease>", self.choose_path_entry_event)
         self.choose_path_button = ctk.CTkButton(self.inside_home_mid_frame, text="Choose path", text_color=("gray10", "gray90"), command=self.save_path_button_event)
         self.choose_path_button.grid(row=1, column=2,padx=(0,20), pady=10, sticky="nsew")
-        self.paste_url_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Youtube url")
+        self.paste_url_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Paste youtube url (Choose the existing path to save first)")
         self.paste_url_entry.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
+        self.paste_url_entry.bind("<KeyRelease>", self.paste_url_entry_event)
         self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"))
         self.download_button.grid(row=2, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.quality_optionemenu = ctk.CTkOptionMenu(self.inside_home_mid_frame, values=["Quality"], text_color=("gray10", "gray90"))
         self.quality_optionemenu.grid(row=3, column=0,columnspan=3 ,padx=20, pady=10, sticky="nsew")
-
+        self.status_label = ctk.CTkLabel(self.inside_home_mid_frame, text="Status: waiting for your save path :)", text_color=("gray10", "gray90"), anchor="w")
+        self.status_label.grid(row=4, column=0, padx=20, sticky="nsew")
+        self.progress_bar = ctk.CTkProgressBar(self.inside_home_mid_frame, orientation="horizontal", mode="indeterminate")
+        self.progress_bar.grid(row=5, column=0, columnspan=3, padx=20, pady= (10,20) , sticky="nsew")
+        self.progress_bar.start()
 
         # create right-side frame inside home
         self.inside_home_right_frame = ctk.CTkFrame(self.home_frame, corner_radius=0)
@@ -114,36 +121,35 @@ class App(ctk.CTk):
         # create settings frame
         self.settings_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
 
+        # * Temp delete later
+        temp_ur_img = YouTube("https://www.youtube.com/watch?v=b9naukf9yes&ab_channel=8KTUBEPlanet").thumbnail_url
+        self.read_image_from_url(temp_ur_img, self.video_thumbnail_label)
+        # *
+
         # select default frame
         self.select_frame_by_name("home")
         self.appearance_mode_optionemenu.set("Dark")
+        self.download_button.configure(state="disabled")
+        self.quality_optionemenu.configure(state="disabled")
+        self.paste_url_entry.configure(state="disabled")
 
-        # set screen to middle every time the app start
-        screen_x = int(self.winfo_screenwidth() / 2 - self.winfo_width() / 2)
-        screen_y = int(self.winfo_screenheight() / 2 - self.winfo_height() / 2)
-        self.geometry("{}+{}".format(screen_x, screen_y))
-
-        # # * Temp delete later
-        # temp_ur_img = YouTube("https://www.youtube.com/watch?v=k7gFWkew_zo&ab_channel=%E1%9E%9C%E1%9E%8E%E1%9F%92%E1%9E%8E%E1%9E%8A%E1%9E%B6-VannDaOfficial").thumbnail_url
-        # self.read_image_from_url(temp_ur_img, self.video_thumbnail_label, 500, 500)
-        # # *
 
     def select_frame_by_name(self, name):
         # set button color for selected button
         self.home_button.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
-        self.history_button.configure(fg_color=("gray75", "gray25") if name == "frame_2" else "transparent")
-        self.settings_button.configure(fg_color=("gray75", "gray25") if name == "frame_3" else "transparent")
+        self.history_button.configure(fg_color=("gray75", "gray25") if name == "history" else "transparent")
+        self.settings_button.configure(fg_color=("gray75", "gray25") if name == "settings" else "transparent")
 
         # show selected frame
         if name == "home":
             self.home_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.home_frame.grid_forget()
-        if name == "frame_2":
+        if name == "history":
             self.history_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.history_frame.grid_forget()
-        if name == "frame_3":
+        if name == "settings":
             self.settings_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.settings_frame.grid_forget()
@@ -160,16 +166,43 @@ class App(ctk.CTk):
     def change_appearance_mode_event(self, new_appearance_mode: str):
         ctk.set_appearance_mode(new_appearance_mode)
 
-    def read_image_from_url(self, url, widget, size_x, size_y):
+    def read_image_from_url(self, url, widget, size_x=640, size_y=360):
+        url = self.get_max_res_thumbnail(url)
         response = requests.get(url)
         img_data = response.content
         img = ctk.CTkImage(Image.open(io.BytesIO(img_data)), size=(size_x, size_y))
-        # img = ctk.CTkImage(Image.open(io.BytesIO(img_data)).crop((0, 0, 1280, 720)), size=(size_x, size_y))
-        
         widget.configure(image=img)
 
+        # read image from directory and display in canvas
+        # img = ImageTk.PhotoImage(Image.open(io.BytesIO(img_data)).resize((size_x, size_y)))
+        # widget.create_image(0, 0, anchor="nw", image=img)
+
+    def get_max_res_thumbnail(self, url):
+        return url.replace("sddefault.jpg", "maxresdefault.jpg")
+    
     def save_path_button_event(self):
         self.choose_path_entry.insert(0, (filedialog.askdirectory()))
+        self.choose_path_entry_event(None)
+
+    def choose_path_entry_event(self, event):
+        check_save_path = self.choose_path_entry.get()
+        # check if path exist
+        if os.path.exists(check_save_path):
+            self.paste_url_entry.configure(state="normal")
+            self.status_label.configure(text="Status: waiting for your url :)")
+        else:
+            self.download_button.configure(state="disabled")
+            self.paste_url_entry.configure(state="disabled")
+            self.quality_optionemenu.configure(state="disabled")
+
+    def paste_url_entry_event(self, event):
+        pass
+
+    def set_app_middle_screen(self):
+        # set screen to middle every time the app start
+        self.screenX = (int(self.winfo_screenwidth()) / 2 - int(self.winfo_reqwidth()) / 2)
+        self.screenY = (int(self.winfo_screenheight()) / 2 - int(self.winfo_reqheight()) / 2)
+        self.geometry("+{}+{}".format(int(self.screenX), int(self.screenY)))
 
     # self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, text=" video", compound="left")
     # self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)

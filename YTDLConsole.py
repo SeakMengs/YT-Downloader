@@ -49,23 +49,25 @@ class YTDLConsole():
         print("Press Ctrl+C to exit the program".center(76, '-'), end="\n\n")
 
         self.askSavePath()
-
-        self.ytUrl_string = input("Enter url: ")
-        ytUrlList = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
-        # check url is valid or not by checking "youtube.com" in url
-        while not any(x in self.ytUrl_string for x in ytUrlList):
-            print("\nUrl is not valid!")
+        try:
             self.ytUrl_string = input("Enter url: ")
+            ytUrlList = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
+            # check url is valid or not by checking "youtube.com" in url
+            while not any(x in self.ytUrl_string for x in ytUrlList):
+                print("\nUrl is not valid!")
+                self.ytUrl_string = input("Enter url: ")
 
-        """ check if the url is a playlist url or a video url by checking "youtube.com/playlist" in url
-            find function return -1 if not found
-        """
-        if self.ytUrl_string.find("youtube.com/playlist?") != -1:
-            # if url is a playlist url go to playlist function
-            self.playlist()
-        else:
-            # else if url is a video url go to video function
-            self.video()
+            """ check if the url is a playlist url or a video url by checking "youtube.com/playlist" in url
+                find function return -1 if not found
+            """
+            if self.ytUrl_string.find("youtube.com/playlist?") != -1:
+                # if url is a playlist url go to playlist function
+                self.playlist()
+            else:
+                # else if url is a video url go to video function
+                self.video()
+        except Exception as err:
+            print("Error: ", err)
 
     # function to deal with video if we recognize youtube url as a video url
     def video(self):
