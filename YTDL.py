@@ -287,6 +287,8 @@ class App(ctk.CTk):
         try:
             self.status_label.configure(text="Status: downloading {}".format(self.yt_video.title))
             self.video_file_name = self.valid_output_file_name(self.yt_video.title)
+            self.video_file_name = self.valid_exist_file_name(self.video_file_name)
+            self.video_file_name = self.video_file_name + ".mp4"
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.list_of_download_options[self.selected_quality][1].split("/")[0] == "video":
 
@@ -297,7 +299,7 @@ class App(ctk.CTk):
                 self.yt_video.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(self.save_to_path, self.video_file_name.replace(".mp4", ".mp3"))
                 
                 # combine audio and video using ffmpeg python library
-                # self.combine_audio_video(self.save_to_path, self.video_file_name, self.video_file_name.replace(".mp4", ".mp3"))
+                self.combine_audio_video(self.save_to_path, self.video_file_name, self.video_file_name.replace(".mp4", ".mp3"))
 
             else:
                 # get file extension by spliting mime_type by '/'
@@ -308,9 +310,9 @@ class App(ctk.CTk):
                     file_extension_type = "mp3"
 
                 # validate file existence
-                self.audio_file_name = self.valid_output_file_name(self.audio_file_name.replace(".mp4", ".{}".format(file_extension_type)))
+                self.video_file_name = self.valid_exist_file_name(self.video_file_name.replace(".mp4", ".{}".format(file_extension_type)))
 
-                self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.audio_file_name.replace(".mp4", file_extension_type))
+                self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.video_file_name.replace(".mp4", file_extension_type))
         except Exception as err:
             self.error_handler(err)
 
@@ -320,11 +322,11 @@ class App(ctk.CTk):
         # using ffmpeg to combine audio and video method using subprocess to overwrite the video file
         try:
             video_name_string = video
-            video = self.valid_output_file_name(video)
+            video = self.valid_exist_file_name(video)
             os.rename(os.path.join(self.save_to_path, video_name_string), os.path.join(self.save_to_path, video))
 
             # check if the file already exist or not if exist add 1 to the file name
-            video_name_string = self.valid_output_file_name(video_name_string)
+            video_name_string = self.valid_exist_file_name(video_name_string)
 
             """ 
                 command explanation:
@@ -335,14 +337,17 @@ class App(ctk.CTk):
             # normally we get the fps, but just for validation in case we get NoneType
             if self.video_fps_int > 0 and self.video_fps_int < 300:
                 # subprocess with fps 
+                # overwrite the video file with the combined audio and video
                 subprocess.call(["ffmpeg", "-i", os.path.join(self.save_to_path, video), "-i", os.path.join(self.save_to_path, audio), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.video_fps_int), os.path.join(self.save_to_path, video_name_string)])
             else:
                 # subprocess without fps 
+                # overwrite the video file with the combined audio and video
                 subprocess.call(["ffmpeg", "-i", os.path.join(self.save_to_path, video), "-i", os.path.join(self.save_to_path, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(self.save_to_path, video_name_string)])
-                
-            
+
             os.remove(os.path.join(self.save_to_path, video))
             os.remove(os.path.join(self.save_to_path, audio))
+
+            self.status_label.configure(text="Status: downloaded {}".format(self.yt_video.title))
 
         except Exception as err:
             self.error_handler(err)
@@ -360,7 +365,7 @@ class App(ctk.CTk):
         return filename
 
 
-    def valid_exist_folder_name(self, filename):
+    def valid_exist_file_name(self, filename):
         # check if folder name exist in current save path
         if os.path.isfile(os.path.join(self.save_to_path, filename)):
             count = 1
