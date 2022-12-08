@@ -109,7 +109,8 @@ class App(ctk.CTk):
         self.paste_url_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Paste youtube url (Choose the existing path to save first)")
         self.paste_url_entry.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
         self.paste_url_entry.bind("<KeyRelease>", self.paste_url_entry_event)
-        self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"), command=self.video_download_event)
+        self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
+                                             command=self.video_download_event)
         self.download_button.grid(row=2, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.quality_optionemenu = ctk.CTkOptionMenu(self.inside_home_mid_frame, values=["Quality"], text_color=("gray10", "gray90"), command=self.option_menu_choose_quality)
         self.quality_optionemenu.grid(row=3, column=0,columnspan=3 ,padx=20, pady=10, sticky="nsew")
@@ -236,8 +237,13 @@ class App(ctk.CTk):
             else:
                 self.status_label.configure(text="Status: video detected, choose your preferred quality :)")
                 # else if url is a video url go to video function
-                self.start_anti_freeze(self.video_event(self.yt_url_string))
+
+                # this is a thread to prevent the gui from freezing it will run the video_event function in a new thread
                 # self.video_event(self.yt_url_string)
+                # start thread
+                threading.Thread(target=self.video_event, args=(self.yt_url_string,)).start()
+
+
         except Exception as err:
             self.error_handler(err)
 
@@ -270,7 +276,6 @@ class App(ctk.CTk):
         # self.quality_optionemenu.configure(values=self.available_download_options)
         # use multi-processing to avoid freezing the gui
         self.quality_optionemenu.configure(values=self.available_download_options)
-
 
     def option_menu_choose_quality(self, select):
         # find the index of the selected quality self.availableDownloadOptions[?] = index, where string is it value
@@ -352,7 +357,6 @@ class App(ctk.CTk):
         except Exception as err:
             self.error_handler(err)
 
-
     def playlist_event(self, url):
         print("playlist")
 
@@ -398,14 +402,8 @@ class App(ctk.CTk):
 
 
     # https://stackoverflow.com/questions/42422139/how-to-easily-avoid-tkinter-freezing
-    def anti_freeze(self):
-        self.update()
-        self.after(1000,self.anti_freeze)
-    
-
-    def start_anti_freeze(self, function):
-        self.anti_freeze()
-        threading.Thread(target=function).start()
+    # def start_anti_freeze(self, function):
+    #     threading.Thread(target=function).start()
 
     # self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, text=" video", compound="left")
     # self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
