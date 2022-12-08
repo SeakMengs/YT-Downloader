@@ -220,6 +220,7 @@ class App(ctk.CTk):
             yt_url_list = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
             if not any(x in self.yt_url_string for x in yt_url_list):
                 self.status_label.configure(text="Status: Youtube url is not valid :(")
+                self.quality_optionemenu.configure(values=["Quality"])
                 self.paste_url_entry.configure(border_color=("red", "red"))
                 return None
 
@@ -296,7 +297,7 @@ class App(ctk.CTk):
                 self.yt_video.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(self.save_to_path, self.video_file_name.replace(".mp4", ".mp3"))
                 
                 # combine audio and video using ffmpeg python library
-                self.combine_audio_video(self.save_to_path, self.video_file_name, self.video_file_name.replace(".mp4", ".mp3"))
+                # self.combine_audio_video(self.save_to_path, self.video_file_name, self.video_file_name.replace(".mp4", ".mp3"))
 
             else:
                 # get file extension by spliting mime_type by '/'
