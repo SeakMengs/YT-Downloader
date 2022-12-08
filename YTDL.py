@@ -7,6 +7,7 @@
 # Import the required modules for the program
 from tkinter import *
 from tkinter import filedialog
+from tkinter import messagebox
 import customtkinter as ctk
 from PIL import Image, ImageTk
 from pytube import YouTube
@@ -27,10 +28,6 @@ class App(ctk.CTk):
         # inherit and run init of parent class
         super().__init__()
 
-        # set app title and set the app to the middle 
-        self.title("YatoDownloader")
-        # self.iconbitmap("icon.ico")
-        # self.config(bg="#000000")
 
         # set default thumbnail size
         self.thumbnail_size_x = 50
@@ -43,6 +40,7 @@ class App(ctk.CTk):
         # load images with light and dark mode image
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                   "Assets")
+        self.logo_ico = os.path.join(image_path, "download.ico")
         self.home_image = ctk.CTkImage(light_image=Image.open(os.path.join(image_path, "home_light.png")),
                                        dark_image=Image.open(os.path.join(image_path, "home_dark.png")), size=(20, 20))
         self.history_image = ctk.CTkImage(light_image=Image.open(os.path.join(image_path, "history_light.png")),
@@ -50,6 +48,12 @@ class App(ctk.CTk):
         self.settings_image = ctk.CTkImage(light_image=Image.open(os.path.join(image_path, "settings_light.png")),
                                        dark_image=Image.open(os.path.join(image_path, "settings_dark.png")), size=(20, 20))
         self.logo_image = ctk.CTkImage(Image.open(os.path.join(image_path, "download.png")), size=(50, 50))
+        
+        # set app title and set the app to the middle 
+        self.title("YatoDownloader")
+        self.iconbitmap(True, self.logo_ico)
+        # self.config(bg="#000000")
+
         # create left-side navigation
         self.leftNavigation_frame = ctk.CTkFrame(self, corner_radius=0)
         self.leftNavigation_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
@@ -133,6 +137,7 @@ class App(ctk.CTk):
         self.quality_optionemenu.configure(state="disabled")
         self.paste_url_entry.configure(state="disabled")
 
+        print(self.paste_url_entry._border_color)
 
     def select_frame_by_name(self, name):
         # set button color for selected button
@@ -173,11 +178,8 @@ class App(ctk.CTk):
         img = ctk.CTkImage(Image.open(io.BytesIO(img_data)), size=(size_x, size_y))
         widget.configure(image=img)
 
-        # read image from directory and display in canvas
-        # img = ImageTk.PhotoImage(Image.open(io.BytesIO(img_data)).resize((size_x, size_y)))
-        # widget.create_image(0, 0, anchor="nw", image=img)
-
     def get_max_res_thumbnail(self, url):
+        # pytube return low res thumbnail, i modify the last part to maxresdefault.jpg so that i will receive the highest resolution available
         return url.replace("sddefault.jpg", "maxresdefault.jpg")
     
     def save_path_button_event(self):
@@ -189,14 +191,42 @@ class App(ctk.CTk):
         # check if path exist
         if os.path.exists(check_save_path):
             self.paste_url_entry.configure(state="normal")
-            self.status_label.configure(text="Status: waiting for your url :)")
+            self.status_label.configure(text="Status: waiting for Youtube url :)")
         else:
             self.download_button.configure(state="disabled")
             self.paste_url_entry.configure(state="disabled")
             self.quality_optionemenu.configure(state="disabled")
 
     def paste_url_entry_event(self, event):
-        pass
+        try:
+            yt_url_string = self.paste_url_entry.get()
+            yt_url_list = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
+            if not any(x in yt_url_string for x in yt_url_list):
+                self.status_label.configure(text="Status: Youtube url is not valid :(")
+                self.paste_url_entry.configure(border_color=("red", "red"))
+                return None
+                """ check if the url is a playlist url or a video url by checking "youtube.com/playlist" in url
+                    find() function return -1 if not found
+                """
+            self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
+            self.quality_optionemenu.configure(state="normal")
+            if yt_url_string.find("youtube.com/playlist?") != -1:
+                self.status_label.configure(text="Status: playlist detected :) Click download to start")
+                # if url is a playlist url go to playlist function
+                self.playlist_event()
+            else:
+                self.status_label.configure(text="Status: video detected :) Click download to start")
+                # else if url is a video url go to video function
+                self.video_event()
+        except Exception as err:
+            self.error_handler(err)
+
+    def video_event(self):
+        print("video")
+
+    def playlist_event(self):
+        print("playlist")
+
 
     def set_app_middle_screen(self):
         # set screen to middle every time the app start
@@ -204,6 +234,8 @@ class App(ctk.CTk):
         self.screenY = (int(self.winfo_screenheight()) / 2 - int(self.winfo_reqheight()) / 2)
         self.geometry("+{}+{}".format(int(self.screenX), int(self.screenY)))
 
+    def error_handler(self, error):
+        messagebox.showerror(title = "YatoDownloader", message = "Error: {}".format(error))
     # self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, text=" video", compound="left")
     # self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
     # self.read_image_from_url(YouTube("https://www.youtube.com/watch?v=_NURmDlK0OE&ab_channel=AirRemix").thumbnail_url, self.home_frame_large_image_label)
