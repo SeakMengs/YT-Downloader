@@ -282,11 +282,10 @@ class App(ctk.CTk):
         # check video and playlist url from youtube
         # request without getting exception raise so that we don't get exception when the url is not valid
         req = requests.get(self.yt_url_string, allow_redirects=False)
-        if req.status_code == 200:
-            print("True")
-            return True
-        print("False")
-        return False
+        # Elegant way to check to write less code :)
+        is_status_code_200 = req.status_code == 200
+        print("status code: ", req.status_code)
+        return is_status_code_200
 
         #**********************************************************************************************************************************
         # How to validate a Youtube video & playlist url until they completely match or has a redirect to the video or playlist in Python?
