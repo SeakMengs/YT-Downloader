@@ -361,9 +361,6 @@ class App(ctk.CTk):
             self.download_button.configure(state="disabled")
             self.quality_optionemenu.configure(state="disabled")
 
-            self.video_file_name = self.valid_output_file_name(self.yt_video.title)
-            self.video_file_name = self.valid_exist_file_name(self.video_file_name)
-            self.video_file_name = self.video_file_name + ".mp4"
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.list_of_download_options[self.selected_quality][1].split("/")[0] == "video":
 
@@ -394,7 +391,7 @@ class App(ctk.CTk):
                     file_extension_type = "mp3"
 
                 # validate file existence
-                self.video_file_name = self.valid_exist_file_name(self.video_file_name.replace(".mp4", ".{}".format(file_extension_type)))
+                self.video_file_name = self.valid_exist_file_name(self.yt_video.title + "." + file_extension_type)
 
                 
                 self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.video_file_name.replace(".mp4", file_extension_type))
