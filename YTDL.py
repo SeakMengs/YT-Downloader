@@ -5,6 +5,7 @@
     Design inspired by customtkinter check them out :) https://github.com/TomSchimansky/CustomTkinter
 """
 # Import the required modules for the program
+import string
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
@@ -18,6 +19,7 @@ import subprocess
 import requests
 import io
 import threading
+import random
 
 ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -49,6 +51,7 @@ class App(ctk.CTk):
         self.settings_image = ctk.CTkImage(light_image=Image.open(os.path.join(image_path, "settings_light.png")),
                                        dark_image=Image.open(os.path.join(image_path, "settings_dark.png")), size=(20, 20))
         self.logo_image = ctk.CTkImage(Image.open(os.path.join(image_path, "download.png")), size=(50, 50))
+        self.thumbnail_image = ctk.CTkImage(Image.open(os.path.join(image_path, "thumbnail.jpg")), size=(640, 360))
         
         # set app title and set the app to the middle 
         self.title("YatoDownloader")
@@ -99,7 +102,8 @@ class App(ctk.CTk):
         self.inside_home_mid_frame.grid_rowconfigure(0, weight=1)
         # * testing
         self.video_thumbnail_label = ctk.CTkLabel(self.inside_home_mid_frame, text_color=("gray10", "gray90"),
-                                                text="", font=ctk.CTkFont(weight="bold", size=15), compound="left", fg_color="transparent", anchor="center")
+                                                text="", font=ctk.CTkFont(weight="bold", size=15), compound="left",
+                                                fg_color="transparent", anchor="center", image=self.thumbnail_image)
         self.video_thumbnail_label.grid(row=0, column=0, columnspan=3, pady=(20, 10), sticky="nsew")
         self.choose_path_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Save path")
         self.choose_path_entry.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
@@ -110,9 +114,9 @@ class App(ctk.CTk):
         self.paste_url_entry.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
         # bind b
         # self.paste_url_entry.bind("<b>" , self.paste_url_entry_event)
-        self.paste_url_entry.bind("<KeyRelease>" , self.start_run_url)
+        self.paste_url_entry.bind("<KeyRelease>" , self.paste_url_thread)
         self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
-                                             command=self.video_download_event)
+                                             command=self.video_download_thread)
         self.download_button.grid(row=2, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.quality_optionemenu = ctk.CTkOptionMenu(self.inside_home_mid_frame, values=["Quality"], text_color=("gray10", "gray90"), command=self.option_menu_choose_quality)
         self.quality_optionemenu.grid(row=3, column=0,columnspan=3 ,padx=20, pady=10, sticky="nsew")
@@ -133,17 +137,13 @@ class App(ctk.CTk):
         # create settings frame
         self.settings_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
 
-        # * Temp delete later
-        temp_ur_img = YouTube("https://www.youtube.com/watch?v=b9naukf9yes&ab_channel=8KTUBEPlanet").thumbnail_url
-        self.read_image_from_url(temp_ur_img, self.video_thumbnail_label)
-        # *--------------------------------------------------------------------------------------------------------
-
         # select default frame and default settings
         self.select_frame_by_name("home")
         self.appearance_mode_optionemenu.set("Dark")
         self.download_button.configure(state="disabled")
         self.quality_optionemenu.configure(state="disabled")
         self.paste_url_entry.configure(state="disabled")
+        self.is_able_to_choose_quality = False
 
 #* Front-end functions ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -208,7 +208,7 @@ class App(ctk.CTk):
         # check if path exist
         if os.path.exists(self.save_to_path):
             self.save_to_path = os.path.abspath(self.save_to_path)
-            print(self.save_to_path)
+            # print(self.save_to_path)
             self.paste_url_entry.configure(state="normal")
             self.status_label.configure(text="Status: waiting for Youtube url :)")
             self.is_being_checked = False
@@ -219,7 +219,7 @@ class App(ctk.CTk):
             self.quality_optionemenu.configure(state="disabled")
 
     # this function purpose is to start multi-threading for the url validation and quality selection
-    def start_run_url(self, event):
+    def paste_url_thread(self, event):
         if self.is_being_checked_first_time:
             self.is_being_checked = False
             self.is_being_checked_first_time = False
@@ -235,6 +235,7 @@ class App(ctk.CTk):
             yt_url_list = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
             if not any(x in self.yt_url_string for x in yt_url_list):
                 self.status_label.configure(text="Status: Youtube url is not valid :(")
+                self.is_able_to_choose_quality = False
                 self.quality_optionemenu.configure(values=["Quality"])
                 self.download_button.configure(state="disabled")
                 if self.yt_url_string != "":
@@ -251,7 +252,6 @@ class App(ctk.CTk):
                 find() function return -1 if not found
             """
             if self.validate_url() == True:
-                self.download_button.configure(state="normal")
                 self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
                 self.quality_optionemenu.configure(state="normal")
 
@@ -274,7 +274,7 @@ class App(ctk.CTk):
         # request without getting exception raise so that we don't get exception when the url is not valid
         req = requests.get(self.yt_url_string, allow_redirects=False)
         if req.status_code == 200:
-            print("True")
+            # print("True")
             return True
         return False
         
@@ -286,7 +286,8 @@ class App(ctk.CTk):
             # replace image
             self.read_image_from_url(self.yt_video.thumbnail_url, self.video_thumbnail_label)
         except Exception as err:
-            self.error_handler(err)
+            # self.error_handler(err)
+            pass
 
         self.available_download_options = []
         self.list_of_download_options = []
@@ -306,12 +307,21 @@ class App(ctk.CTk):
                 self.available_download_options.append("Quality: {},  Format: {},  Fps: {},  Filesize: {}".format(stream.resolution, showMp3, stream.fps , str(round(stream.filesize / 1048576, 2)) + " MB"))
 
         self.quality_optionemenu.configure(values=self.available_download_options)
-        self.status_label.configure(text="Status: video detected, choose your preferred quality :)")
+        self.is_able_to_choose_quality = True
+        if self.validate_url():
+            self.status_label.configure(text="Status: video found, choose your preferred quality :)")
+        else:
+            self.status_label.configure(text="Status: valid url but video not found :(")
+            self.is_able_to_choose_quality = False
+            self.quality_optionemenu.configure(values=["Quality"])
+            self.download_button.configure(state="disabled")
 
         self.is_being_checked = False
 
 
     def option_menu_choose_quality(self, select):
+        if self.is_able_to_choose_quality == False:
+            return None
         # find the index of the selected quality self.availableDownloadOptions[?] = index, where string is it value
         try:
             self.selected_quality = self.available_download_options.index(select)
@@ -322,23 +332,38 @@ class App(ctk.CTk):
 
 
     #* When user click download it start here ------------------------------------------------------------------------------------------------------------------------------------
+    def  video_download_thread(self):
+        # run download on another thread to prevent gui from freezing
+        multi_thread_download = threading.Thread(target=self.video_download_event)
+        multi_thread_download.start()
+
+    
     def video_download_event(self):
         try:
             self.status_label.configure(text="Status: downloading {}".format(self.yt_video.title))
+            self.download_button.configure(state="disabled")
             self.video_file_name = self.valid_output_file_name(self.yt_video.title)
             self.video_file_name = self.valid_exist_file_name(self.video_file_name)
             self.video_file_name = self.video_file_name + ".mp4"
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.list_of_download_options[self.selected_quality][1].split("/")[0] == "video":
+                
+                self.video_file_name = self.valid_exist_file_name(self.video_file_name)
 
                 self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.video_file_name)
                 self.video_fps_int = self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].fps
 
+                # validate file existence
+                # generate random file name 5 characters long
+                random_name = 'temp_audio_' + "".join(random.choices(string.ascii_uppercase + string.digits, k=5))
+                self.audio_file_name = self.valid_exist_file_name(random_name + ".mp3")
+
                 # download highest audio and combine it with video for me
-                self.yt_video.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(self.save_to_path, self.video_file_name.replace(".mp4", ".mp3"))
+                self.yt_video.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(self.save_to_path, self.audio_file_name.replace(".mp4", ".mp3"))
+                
                 
                 # combine audio and video using ffmpeg python library
-                self.combine_audio_video(self.save_to_path, self.video_file_name, self.video_file_name.replace(".mp4", ".mp3"))
+                self.combine_audio_video(self.save_to_path, self.video_file_name, self.audio_file_name)
 
             else:
                 # get file extension by spliting mime_type by '/'
@@ -352,17 +377,18 @@ class App(ctk.CTk):
                 self.video_file_name = self.valid_exist_file_name(self.video_file_name.replace(".mp4", ".{}".format(file_extension_type)))
 
                 self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.video_file_name.replace(".mp4", file_extension_type))
+                self.download_button.configure(state="normal")
         except Exception as err:
             self.error_handler(err)
 
 
-    def combine_audio_video(self, save_path, video, audio):
+    def combine_audio_video(self, save_path, video_file_name_arg, audio_file_name_arg):
 
         # using ffmpeg to combine audio and video method using subprocess to overwrite the video file
         try:
-            video_name_string = video
-            video = self.valid_exist_file_name(video)
-            os.rename(os.path.join(self.save_to_path, video_name_string), os.path.join(self.save_to_path, video))
+            video_name_string = video_file_name_arg
+            video_file_name_arg = self.valid_exist_file_name(video_file_name_arg)
+            os.rename(os.path.join(self.save_to_path, video_name_string), os.path.join(self.save_to_path, video_file_name_arg))
 
             # check if the file already exist or not if exist add 1 to the file name
             video_name_string = self.valid_exist_file_name(video_name_string)
@@ -377,22 +403,23 @@ class App(ctk.CTk):
             if self.video_fps_int > 0 and self.video_fps_int < 300:
                 # subprocess with fps 
                 # overwrite the video file with the combined audio and video
-                subprocess.call(["ffmpeg", "-i", os.path.join(self.save_to_path, video), "-i", os.path.join(self.save_to_path, audio), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.video_fps_int), os.path.join(self.save_to_path, video_name_string)])
+                subprocess.call(["ffmpeg", "-i", os.path.join(self.save_to_path, video_file_name_arg), "-i", os.path.join(self.save_to_path, audio_file_name_arg), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.video_fps_int), os.path.join(self.save_to_path, video_name_string)])
             else:
                 # subprocess without fps 
                 # overwrite the video file with the combined audio and video
-                subprocess.call(["ffmpeg", "-i", os.path.join(self.save_to_path, video), "-i", os.path.join(self.save_to_path, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(self.save_to_path, video_name_string)])
+                subprocess.call(["ffmpeg", "-i", os.path.join(self.save_to_path, video_file_name_arg), "-i", os.path.join(self.save_to_path, audio_file_name_arg), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(self.save_to_path, video_name_string)])
 
-            os.remove(os.path.join(self.save_to_path, video))
-            os.remove(os.path.join(self.save_to_path, audio))
+            os.remove(os.path.join(self.save_to_path, video_file_name_arg))
+            os.remove(os.path.join(self.save_to_path, audio_file_name_arg))
 
             self.status_label.configure(text="Status: downloaded {}".format(self.yt_video.title))
-
+            self.download_button.configure(state="normal")
+            
         except Exception as err:
             self.error_handler(err)
 
     def playlist_event(self, url):
-        self.status_label.configure(text="Status: playlist detected :) Click download to start")
+        self.status_label.configure(text="Status: playlist found:) Click download to start")
 
 
 
