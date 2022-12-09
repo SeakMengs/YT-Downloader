@@ -6,6 +6,8 @@
 """
 
 # Import necessary libraries to use in our program
+import random
+import string
 from pytube import YouTube
 from pytube import Playlist
 import os
@@ -51,7 +53,7 @@ class YTDLConsole():
         self.askSavePath()
         try:
             self.ytUrl_string = input("Enter url: ")
-            ytUrlList = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
+            ytUrlList = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/", "youtube.com/shorts"]
             # check url is valid or not by checking "youtube.com" in url
             while not any(x in self.ytUrl_string for x in ytUrlList):
                 print("\nUrl is not valid!")
@@ -153,12 +155,26 @@ class YTDLConsole():
         # start download
         if self.playListDownloadType == "video":
             # download all videos in playlist with highest resolution and with sounds
-            for video in self.ytPlaylist.videos:
-                print("\nDownloading {}".format(video.title))
-                video.register_on_progress_callback(self.progress_Check)
-                playListVideoName_string = self.validFileName(video.title) + ".mp4"
+            for video in self.ytPlaylist:
+                self.ytVideo = YouTube(video, on_progress_callback=self.progress_Check)
+                print("\nDownloading {}".format(self.ytVideo.title))
+                random_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))	
+
+                # validate file existence
+                self.video_file_name = self.validExistedFileName("video_" + random_name + ".mp4")
+
+                # validate file existence
+                # generate random file name 5 characters long
+                self.audio_file_name = self.validExistedFileName("audio_" + random_name + ".mp3")
+
                 # download
-                video.streams.filter(file_extension="mp4").order_by("resolution").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, playListVideoName_string)
+                self.ytVideo.streams.filter(file_extension="mp4").order_by("resolution").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, self.video_file_name)
+                self.videoFps_Int = self.ytVideo.streams.filter(file_extension="mp4").order_by("resolution").desc().first().fps
+                # download audio
+                self.ytVideo.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first().download(self.savePath_string + "\\" + self.playListfolderName, self.audio_file_name)
+                # combine audio and video
+                self.combineAudioVideo(self.savePath_string + "\\" + self.playListfolderName, self.video_file_name, self.audio_file_name)
+                
         elif self.playListDownloadType == "audio":
             # download all videos in playlist with highest resolution and without sounds
             for video in self.ytPlaylist.videos:
@@ -194,14 +210,23 @@ class YTDLConsole():
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.availableDownloadOptions[downloadOptions][1].split("/")[0] == "video":
 
-                self.ytVideo.streams.filter(file_extension="mp4").order_by("filesize").desc()[downloadOptions].download(savePath, filename)
+                random_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))	
+
+                # validate file existence
+                self.video_file_name = self.validExistedFileName("video_" + random_name + ".mp4")
+
+                # validate file existence
+                # generate random file name 5 characters long
+                self.audio_file_name = self.validExistedFileName("audio_" + random_name + ".mp3")
+
+                self.ytVideo.streams.filter(file_extension="mp4").order_by("filesize").desc()[downloadOptions].download(savePath, self.video_file_name)
                 self.videoFps_Int = self.ytVideo.streams.filter(file_extension="mp4").order_by("filesize").desc()[downloadOptions].fps
 
                 # download highest audio and combine it with video for me
-                self.ytVideo.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(savePath, filename.replace(".mp4", ".mp3"))
+                self.ytVideo.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(savePath, self.audio_file_name)
                 
                 # combine audio and video using ffmpeg python library
-                self.combineAudioVideo(savePath, filename, filename.replace(".mp4", ".mp3"))
+                self.combineAudioVideo(savePath, self.video_file_name, self.audio_file_name)
 
             else:
                 # get file extension by spliting mime_type by '/'
@@ -258,12 +283,9 @@ class YTDLConsole():
 
         # using ffmpeg to combine audio and video method using subprocess to overwrite the video file
         try:
-            videoName = video
-            video = self.validExistedFileName(video)
-            os.rename(os.path.join(savePath, videoName), os.path.join(savePath, video))
-
-            # check if the file already exist or not if exist add 1 to the file name
-            videoName = self.validExistedFileName(videoName)
+            output_file_name = self.ytVideo.title + ".mp4"
+            output_file_name = self.validFileName(output_file_name)
+            output_file_name = self.validExistedFileName(output_file_name)
 
             """ 
                 command explanation:
@@ -274,10 +296,10 @@ class YTDLConsole():
             # normally we get the fps, but just for validation in case we get NoneType
             if self.videoFps_Int > 0 and self.videoFps_Int < 300:
                 # subprocess with fps 
-                subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.videoFps_Int), os.path.join(savePath, videoName)])
+                subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c", "copy", "-map", "0:v", "-map", "1:a", "-r", str(self.videoFps_Int), os.path.join(savePath, output_file_name)])
             else:
                 # subprocess without fps 
-                subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(savePath, videoName)])
+                subprocess.call(["ffmpeg", "-i", os.path.join(savePath, video), "-i", os.path.join(savePath, audio), "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", os.path.join(savePath, output_file_name)])
                 
             
             os.remove(os.path.join(savePath, video))
