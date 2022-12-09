@@ -5,7 +5,6 @@
     Design inspired by customtkinter check them out :) https://github.com/TomSchimansky/CustomTkinter
 """
 # Import the required modules for the program
-import re
 import string
 from tkinter import *
 from tkinter import filedialog
@@ -15,7 +14,6 @@ from PIL import Image, ImageTk
 from pytube import YouTube
 from pytube import Playlist
 import os
-import sys
 import subprocess
 import requests
 import io
