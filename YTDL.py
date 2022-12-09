@@ -108,7 +108,9 @@ class App(ctk.CTk):
         self.choose_path_button.grid(row=1, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.paste_url_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Paste youtube url (Choose the existing path to save first)")
         self.paste_url_entry.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
-        self.paste_url_entry.bind("<KeyRelease>", self.paste_url_entry_event)
+        # bind b
+        # self.paste_url_entry.bind("<b>" , self.paste_url_entry_event)
+        self.paste_url_entry.bind("<KeyRelease>" , self.start_run_url)
         self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
                                              command=self.video_download_event)
         self.download_button.grid(row=2, column=2,padx=(0,20), pady=10, sticky="nsew")
@@ -136,7 +138,7 @@ class App(ctk.CTk):
         self.read_image_from_url(temp_ur_img, self.video_thumbnail_label)
         # *--------------------------------------------------------------------------------------------------------
 
-        # select default frame
+        # select default frame and default settings
         self.select_frame_by_name("home")
         self.appearance_mode_optionemenu.set("Dark")
         self.download_button.configure(state="disabled")
@@ -209,57 +211,87 @@ class App(ctk.CTk):
             print(self.save_to_path)
             self.paste_url_entry.configure(state="normal")
             self.status_label.configure(text="Status: waiting for Youtube url :)")
+            self.is_being_checked = False
+            self.is_being_checked_first_time = True
         else:
             self.download_button.configure(state="disabled")
             self.paste_url_entry.configure(state="disabled")
             self.quality_optionemenu.configure(state="disabled")
 
+    # this function purpose is to start multi-threading for the url validation and quality selection
+    def start_run_url(self, event):
+        if self.is_being_checked_first_time:
+            self.is_being_checked = False
+            self.is_being_checked_first_time = False
+        if self.is_being_checked:
+            return
+        multi_thread_run_url = threading.Thread(target=self.paste_url_entry_event)
+        multi_thread_run_url.start()
 
-    def paste_url_entry_event(self, event):
+    def paste_url_entry_event(self):
         try:
+            self.is_being_checked = True
             self.yt_url_string = self.paste_url_entry.get()
             yt_url_list = ["youtube.com/watch", "youtube.com/playlist", "youtu.be/"]
             if not any(x in self.yt_url_string for x in yt_url_list):
                 self.status_label.configure(text="Status: Youtube url is not valid :(")
                 self.quality_optionemenu.configure(values=["Quality"])
-                self.paste_url_entry.configure(border_color=("red", "red"))
+                self.download_button.configure(state="disabled")
+                if self.yt_url_string != "":
+                    self.paste_url_entry.configure(border_color=("red", "red"))
+                else: 
+                    self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
+                    self.status_label.configure(text="Status: waiting for Youtube url :)")
+
+                self.is_being_checked = False
+                self.yt_url_string = ""
                 return None
 
             """ check if the url is a playlist url or a video url by checking "youtube.com/playlist" in url
                 find() function return -1 if not found
             """
-            self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
-            self.quality_optionemenu.configure(state="normal")
+            if self.validate_url() == True:
+                self.download_button.configure(state="normal")
+                self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
+                self.quality_optionemenu.configure(state="normal")
+
             if self.yt_url_string.find("youtube.com/playlist?") != -1:
-                self.status_label.configure(text="Status: playlist detected :) Click download to start")
                 # if url is a playlist url go to playlist function
                 self.playlist_event(self.yt_url_string)
             else:
-                self.status_label.configure(text="Status: video detected, choose your preferred quality :)")
                 # else if url is a video url go to video function
 
                 # this is a thread to prevent the gui from freezing it will run the video_event function in a new thread
-                # self.video_event(self.yt_url_string)
-                # start thread
-                threading.Thread(target=self.video_event, args=(self.yt_url_string,)).start()
+                self.video_event(self.yt_url_string)
+                # print("active: ", threading.active_count())
 
 
         except Exception as err:
             self.error_handler(err)
 
+    def validate_url(self):
+        # check video and playlist url from youtube
+        # request without getting exception raise so that we don't get exception when the url is not valid
+        req = requests.get(self.yt_url_string, allow_redirects=False)
+        if req.status_code == 200:
+            print("True")
+            return True
+        return False
+        
 
     def video_event(self, url):
+        self.status_label.configure(text="Status: getting quality options, thumbnail :)")
         try:
             self.yt_video = YouTube(url, on_progress_callback=self.progress_Check)
             # replace image
             self.read_image_from_url(self.yt_video.thumbnail_url, self.video_thumbnail_label)
         except Exception as err:
             self.error_handler(err)
+
         self.available_download_options = []
         self.list_of_download_options = []
         # check all available download and sort by highest stream size and abr
         for stream in self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc():
-            # convert file size to MB precisely by dividing 1024*1024
 
             # because we receive the mine_type as audio/mp4, we modify it to audio/mp3 to avoid confusion
             showMp3 = stream.mime_type
@@ -273,9 +305,11 @@ class App(ctk.CTk):
                 self.list_of_download_options.append([stream.resolution, showMp3,"Fps {}".format(stream.fps) , str(round(stream.filesize / 1048576, 2)) + " MB"])
                 self.available_download_options.append("Quality: {},  Format: {},  Fps: {},  Filesize: {}".format(stream.resolution, showMp3, stream.fps , str(round(stream.filesize / 1048576, 2)) + " MB"))
 
-        # self.quality_optionemenu.configure(values=self.available_download_options)
-        # use multi-processing to avoid freezing the gui
         self.quality_optionemenu.configure(values=self.available_download_options)
+        self.status_label.configure(text="Status: video detected, choose your preferred quality :)")
+
+        self.is_being_checked = False
+
 
     def option_menu_choose_quality(self, select):
         # find the index of the selected quality self.availableDownloadOptions[?] = index, where string is it value
@@ -358,7 +392,8 @@ class App(ctk.CTk):
             self.error_handler(err)
 
     def playlist_event(self, url):
-        print("playlist")
+        self.status_label.configure(text="Status: playlist detected :) Click download to start")
+
 
 
     def valid_output_file_name(self, filename):
@@ -402,8 +437,6 @@ class App(ctk.CTk):
 
 
     # https://stackoverflow.com/questions/42422139/how-to-easily-avoid-tkinter-freezing
-    # def start_anti_freeze(self, function):
-    #     threading.Thread(target=function).start()
 
     # self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, text=" video", compound="left")
     # self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
