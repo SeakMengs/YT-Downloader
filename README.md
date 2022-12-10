@@ -20,10 +20,11 @@ place downloaded file in one folder and run YTDLConsole.exe
 # How to convert python file to exe for console version
 pip install pyinstaller <br>
 <br>
-cd to project folder <br>
+cd to project folder <br><br>
+for gui version <br>
 <!-- pyinstaller --console -–add-binary ffmpeg.exe;. --onefile -i logo.ico YTDLConsole.py -->
 pyinstaller --console --onefile -i logo.ico YTDLConsole.py
-<br>
+<br><br>
 for gui version <br>
 https://github.com/TomSchimansky/CustomTkinter/wiki/Packaging <br>
 pyinstaller --noconfirm --onedir --windowed --add-data "<CustomTkinter Location>/customtkinter;customtkinter/"  "<Path to Python Script>"<br>
