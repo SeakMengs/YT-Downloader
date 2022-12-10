@@ -23,3 +23,8 @@ pip install pyinstaller <br>
 cd to project folder <br>
 <!-- pyinstaller --console -–add-binary ffmpeg.exe;. --onefile -i logo.ico YTDLConsole.py -->
 pyinstaller --console --onefile -i logo.ico YTDLConsole.py
+<br>
+for gui version <br>
+https://github.com/TomSchimansky/CustomTkinter/wiki/Packaging <br>
+pyinstaller --noconfirm --onedir --windowed --add-data "<CustomTkinter Location>/customtkinter;customtkinter/"  "<Path to Python Script>"<br>
+then add "Assets folder and ffmpeg to the folder that has exe"
