@@ -148,6 +148,7 @@ class App(ctk.CTk):
         self.quality_optionemenu.configure(state="disabled")
         self.paste_url_entry.configure(state="disabled")
         self.is_able_to_choose_quality = False
+        self.is_playlist_downloading = False
 
 #* Front-end functions ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -378,16 +379,10 @@ class App(ctk.CTk):
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.list_of_download_options[self.selected_quality][1].split("/")[0] == "video":
 
-                random_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))
-                
-                self.video_file_name = self.valid_exist_file_name("video_" + random_name + ".mp4")
+                self.generate_random_file_name()
 
                 self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.video_file_name)
                 self.video_fps_int = self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].fps
-
-                # validate file existence
-                # generate random file name 5 characters long
-                self.audio_file_name = self.valid_exist_file_name("audio_" + random_name + ".mp3")
 
                 # download highest audio and combine it with video for me
                 self.yt_video.streams.filter(mime_type="audio/mp4").order_by("abr").desc().first().download(self.save_to_path, self.audio_file_name.replace(".mp4", ".mp3"))
@@ -447,6 +442,10 @@ class App(ctk.CTk):
             os.remove(os.path.join(save_path, audio_file_name_arg))
 
             self.status_label.configure(text="Status: {} has been downloaded".format(self.yt_video.title))
+
+            if self.is_playlist_downloading == True:
+                return
+
             self.download_button.configure(state="normal")
             self.quality_optionemenu.configure(state="normal")
 
@@ -512,7 +511,7 @@ class App(ctk.CTk):
                 os.mkdir(self.save_to_path + "\\" + self.playlist_folder_name + " " + str(count))
                 self.playlist_folder_name = self.playlist_folder_name + " " + str(count)
 
-
+            self.is_playlist_downloading = True
             # start download
             if self.available_download_options[self.selected_quality] == "Download all videos in playlist 720p":
                 # download all videos in playlist with highest resolution and with sounds
@@ -522,14 +521,7 @@ class App(ctk.CTk):
                     self.read_image_from_url(self.yt_video.thumbnail_url, self.video_thumbnail_label)
                     self.yt_video.register_on_progress_callback(self.progress_check_thread)
 
-                    random_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))	
-
-                    # validate file existence
-                    self.video_file_name = self.valid_exist_file_name("video_" + random_name + ".mp4")
-
-                    # validate file existence
-                    # generate random file name 5 characters long
-                    self.audio_file_name = self.valid_exist_file_name("audio_" + random_name + ".mp3")
+                    self.generate_random_file_name()
 
                     # download highest resolution video with sounds
                     self.yt_video.streams.filter(file_extension="mp4").order_by("resolution").desc().first().download(self.save_to_path + "\\" + self.playlist_folder_name, self.video_file_name)
@@ -550,14 +542,42 @@ class App(ctk.CTk):
                     # download
                     self.yt_video.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first().download(self.save_to_path + "\\" + self.playlist_folder_name, playlist_name_string)
 
+            elif self.available_download_options[self.selected_quality] == "Download all highest quality video in playlist":
+                # download all videos in playlist with highest resolution and without sounds
+                for video in self.yt_playlist:
+                    self.yt_video = YouTube(video)
+                    # replace image
+                    self.read_image_from_url(self.yt_video.thumbnail_url, self.video_thumbnail_label)
+                    self.yt_video.register_on_progress_callback(self.progress_check_thread)
+
+                    self.generate_random_file_name()
+
+                    # download highest resolution video with sounds
+                    self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc().first().download(self.save_to_path + "\\" + self.playlist_folder_name, self.video_file_name)
+                    self.video_fps_int = self.yt_video.streams.filter(file_extension="mp4").order_by("resolution").desc().first().fps
+
+                    # download highest resolution audio with sounds
+                    self.yt_video.streams.filter(only_audio=True, file_extension="mp4").order_by("abr").desc().first().download(self.save_to_path + "\\" + self.playlist_folder_name, self.audio_file_name)
+                    self.combine_audio_video(self.save_to_path + "\\" + self.playlist_folder_name, self.video_file_name, self.audio_file_name)
 
             self.status_label.configure(text="Status: \"{}\" has been downloaded".format(self.yt_playlist.title))
             self.quality_optionemenu.configure(state="normal")
+            self.download_button.configure(state="normal")
+            self.is_playlist_downloading = False
 
         except Exception as err:
             self.is_being_checked = False
             self.error_handler(err)
+    
 
+    def generate_random_file_name(self):
+
+        random_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))	
+        # validate file existence
+        self.video_file_name = self.valid_exist_file_name("video_" + random_name + ".mp4")
+
+        # validate file existence
+        self.audio_file_name = self.valid_exist_file_name("audio_" + random_name + ".mp3")
 
     def valid_output_file_name(self, filename):
         # check if downloadFileName contain any special character of file name and replace with '-'
