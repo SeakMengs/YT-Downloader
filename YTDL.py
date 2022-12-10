@@ -111,17 +111,20 @@ class App(ctk.CTk):
         self.choose_path_button.grid(row=1, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.paste_url_entry = ctk.CTkEntry(self.inside_home_mid_frame, placeholder_text="Paste youtube url (Choose the existing path to save first)")
         self.paste_url_entry.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
-        # bind b
-        # self.paste_url_entry.bind("<b>" , self.paste_url_entry_event)
-        self.paste_url_entry.bind("<KeyRelease>" , self.paste_url_thread)
-        self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
-                                             command=self.video_download_thread)
-        self.download_button.grid(row=2, column=2,padx=(0,20), pady=10, sticky="nsew")
+        # self.paste_url_entry.bind("<KeyRelease>" , self.paste_url_thread)
+        # self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
+        #                                      command=self.video_download_thread)
+        self.find_button = ctk.CTkButton(self.inside_home_mid_frame, text="Find", text_color=("gray10", "gray90"),
+                                             command=self.paste_url_thread)
+        self.find_button.grid(row=2, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.quality_optionemenu = ctk.CTkOptionMenu(self.inside_home_mid_frame, values=["Quality"], text_color=("gray10", "gray90"), command=self.option_menu_choose_quality)
         self.quality_optionemenu.grid(row=3, column=0,columnspan=3 ,padx=20, pady=10, sticky="nsew")
         self.status_label = ctk.CTkLabel(self.inside_home_mid_frame, text="Status: waiting for your save path :)", text_color=("gray10", "gray90"), anchor="w")
-        self.status_label.grid(row=4, column=0, columnspan=3, padx=20, sticky="nsew")
+        self.status_label.grid(row=4, column=0, columnspan=2, padx=20, sticky="nsew")
         self.status_label.bind('<Configure>', lambda e: self.status_label.configure(wraplength=self.status_label.winfo_width()))
+        self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
+                                             command=self.video_download_thread)
+        self.download_button.grid(row=4, column=2,padx=(0,20), pady=10, sticky="nsew")
         self.progress_bar = ctk.CTkProgressBar(self.inside_home_mid_frame, orientation="horizontal", mode="indeterminate")
         self.progress_bar.grid(row=5, column=0, columnspan=3, padx=20, pady= (10,20) , sticky="nsew")
         self.progress_bar.start()
@@ -141,6 +144,7 @@ class App(ctk.CTk):
         self.select_frame_by_name("home")
         self.appearance_mode_optionemenu.set("Dark")
         self.download_button.configure(state="disabled")
+        self.find_button.configure(state="disabled")
         self.quality_optionemenu.configure(state="disabled")
         self.paste_url_entry.configure(state="disabled")
         self.is_able_to_choose_quality = False
@@ -215,15 +219,17 @@ class App(ctk.CTk):
             # print(self.save_to_path)
             self.paste_url_entry.configure(state="normal")
             self.status_label.configure(text="Status: waiting for Youtube url :)")
+            self.find_button.configure(state="normal")
             self.is_being_checked = False
             self.is_being_checked_first_time = True
         else:
+            self.find_button.configure(state="disabled")
             self.download_button.configure(state="disabled")
             self.paste_url_entry.configure(state="disabled")
             self.quality_optionemenu.configure(state="disabled")
 
     # this function purpose is to start multi-threading for the url validation and quality selection
-    def paste_url_thread(self, event):
+    def paste_url_thread(self):
         if self.is_being_checked_first_time:
             self.is_being_checked = False
             self.is_being_checked_first_time = False
@@ -247,7 +253,7 @@ class App(ctk.CTk):
                 else: 
                     self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
                     self.status_label.configure(text="Status: waiting for Youtube url :)")
-
+                
                 self.is_being_checked = False
                 self.yt_url_string = ""
                 return None
@@ -256,8 +262,9 @@ class App(ctk.CTk):
                 find() function return -1 if not found
             """
             if self.validate_url() == True:
-                self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
+                # self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
                 self.quality_optionemenu.configure(state="normal")
+                self.paste_url_entry.configure(border_color=("green", "green"))
             else:
                 self.paste_url_entry.configure(border_color=("red", "red"))
                 self.quality_optionemenu.configure(state="disabled")
@@ -276,6 +283,8 @@ class App(ctk.CTk):
                 self.video_event(self.yt_url_string)
                 # print("active: ", threading.active_count())
         except Exception as err:
+            self.quality_optionemenu.configure(values=["Quality"])
+            self.download_button.configure(state="disabled")
             self.status_label.configure(text="Status: Youtube url is not valid :(")
             self.paste_url_entry.configure(border_color=("red", "red"))
             self.is_being_checked = False
@@ -286,9 +295,7 @@ class App(ctk.CTk):
         # request without getting exception raise so that we don't get exception when the url is not valid
         req = requests.get(self.yt_url_string, allow_redirects=False)
         # Elegant way to check to write less code :)
-        is_status_code_200 = req.status_code == 200
-        print("status code: ", req.status_code)
-        return is_status_code_200
+        return req.status_code == 200
 
         #**********************************************************************************************************************************
         # How to validate a Youtube video & playlist url until they completely match or has a redirect to the video or playlist in Python?
@@ -303,7 +310,11 @@ class App(ctk.CTk):
             self.yt_video = YouTube(url, on_progress_callback=self.progress_check)
             # replace image
         except Exception as err:
-            self.error_handler(err)
+            self.status_label.configure(text="Status: {}".format(err))
+            self.paste_url_entry.configure(border_color=("red", "red"))
+            self.is_being_checked = False
+            self.quality_optionemenu.configure(values=["Quality"])
+            # self.error_handler(err)
 
         self.available_download_options = []
         self.list_of_download_options = []
@@ -347,6 +358,7 @@ class App(ctk.CTk):
             self.download_button.configure(state="normal")
             self.status_label.configure(text="Status: waiting for you to click download :)")
         except Exception as err:
+            self.is_being_checked = False
             self.error_handler(err)
 
 
@@ -403,6 +415,7 @@ class App(ctk.CTk):
                 self.quality_optionemenu.configure(state="normal")
 
         except Exception as err:
+            self.is_being_checked = False
             self.error_handler(err)
 
 
@@ -448,10 +461,12 @@ class App(ctk.CTk):
             # if only the youtube playlist is a real playlist then we can get the thumbnail
             self.yt_playlist = Playlist(url)
         except Exception as err:
-            self.error_handler(err)
+            self.status_label.configure(text="Status: {}".format(err))
+            self.paste_url_entry.configure(border_color=("red", "red"))
+            self.is_being_checked = False
+            self.download_button.configure(state="disabled")
+            # self.error_handler(err)
 
-        printcode = requests.get(self.yt_playlist[0]).status_code
-        print(printcode)
         # replace image with the thumbnail of the video index 0
         if requests.get(self.yt_playlist[0]).status_code == 200:
             yt_playlist_thumbnail_url = YouTube(self.yt_playlist[0]).thumbnail_url
@@ -540,6 +555,7 @@ class App(ctk.CTk):
             self.quality_optionemenu.configure(state="normal")
 
         except Exception as err:
+            self.is_being_checked = False
             self.error_handler(err)
 
 
