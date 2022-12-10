@@ -27,5 +27,5 @@ pyinstaller --console --onefile -i logo.ico YTDLConsole.py
 <br><br>
 for gui version <br>
 https://github.com/TomSchimansky/CustomTkinter/wiki/Packaging <br>
-pyinstaller --noconfirm --onedir --windowed --add-data "<CustomTkinter Location>/customtkinter;customtkinter/"  "<Path to Python Script>"<br>
+pyinstaller --noconfirm --onedir --windowed --add-data "CustomTkinter Location/customtkinter;customtkinter/"  "Path to Python Script"<br>
 then add "Assets folder and ffmpeg to the folder that has exe"
