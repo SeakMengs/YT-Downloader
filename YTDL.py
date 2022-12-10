@@ -125,9 +125,9 @@ class App(ctk.CTk):
         self.download_button = ctk.CTkButton(self.inside_home_mid_frame, text="Download", text_color=("gray10", "gray90"),
                                              command=self.video_download_thread)
         self.download_button.grid(row=4, column=2,padx=(0,20), pady=10, sticky="nsew")
-        self.progress_bar = ctk.CTkProgressBar(self.inside_home_mid_frame, orientation="horizontal", mode="indeterminate")
-        self.progress_bar.grid(row=5, column=0, columnspan=3, padx=20, pady= (10,20) , sticky="nsew")
-        self.progress_bar.start()
+        # self.progress_bar = ctk.CTkProgressBar(self.inside_home_mid_frame, orientation="horizontal", mode="indeterminate")
+        # self.progress_bar.grid(row=5, column=0, columnspan=3, padx=20, pady= (10,20) , sticky="nsew")
+        # self.progress_bar.start()
         
         #* For now these frames are not part of the plan, they're part of the future plan :)
         # create right-side frame inside home
@@ -375,6 +375,8 @@ class App(ctk.CTk):
             self.status_label.configure(text="Status: downloading {}".format(self.yt_video.title))
             self.download_button.configure(state="disabled")
             self.quality_optionemenu.configure(state="disabled")
+            self.paste_url_entry.configure(border_color=("blue", "blue"))
+
 
             # check if the download is a video or audio, if video download video and download highest audio and then combine it together to a mp4, if audio download audio
             if self.list_of_download_options[self.selected_quality][1].split("/")[0] == "video":
@@ -405,9 +407,11 @@ class App(ctk.CTk):
                 
                 self.yt_video.streams.filter(file_extension="mp4").order_by("filesize").desc()[self.selected_quality].download(self.save_to_path, self.video_file_name.replace(".mp4", file_extension_type))
                 
-                self.status_label.configure(text="Status: {} has been downloaded".format(self.yt_video.title))
-                self.download_button.configure(state="normal")
-                self.quality_optionemenu.configure(state="normal")
+            self.status_label.configure(text="Status: {} has been downloaded".format(self.yt_video.title))
+            self.download_button.configure(state="normal")
+            self.quality_optionemenu.configure(state="normal")
+            self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
+
 
         except Exception as err:
             self.is_being_checked = False
@@ -499,7 +503,8 @@ class App(ctk.CTk):
             self.playlist_folder_name = self.yt_playlist.title
             self.download_button.configure(state="disabled")
             self.quality_optionemenu.configure(state="disabled")
-        
+            self.paste_url_entry.configure(border_color=("blue", "blue"))
+
 
             # check save path + folder name is exit or not, if not create a new folder, if exist, create a new folder with number
             if not os.path.exists(self.save_to_path + "\\" + self.playlist_folder_name):
@@ -564,6 +569,8 @@ class App(ctk.CTk):
             self.quality_optionemenu.configure(state="normal")
             self.download_button.configure(state="normal")
             self.is_playlist_downloading = False
+            self.paste_url_entry.configure(border_color=("#979DA2", "#565B5E"))
+
 
         except Exception as err:
             self.is_being_checked = False
