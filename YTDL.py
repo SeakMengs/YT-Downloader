@@ -276,7 +276,10 @@ class App(ctk.CTk):
                 self.video_event(self.yt_url_string)
                 # print("active: ", threading.active_count())
         except Exception as err:
-            self.error_handler(err)
+            self.status_label.configure(text="Status: Youtube url is not valid :(")
+            self.paste_url_entry.configure(border_color=("red", "red"))
+            self.is_being_checked = False
+            # self.error_handler(err)
 
     def validate_url(self):
         # check video and playlist url from youtube
