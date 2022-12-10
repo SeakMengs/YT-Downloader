@@ -54,7 +54,7 @@ class App(ctk.CTk):
         
         # set app title and set the app to the middle 
         self.title("YatoDownloader")
-        self.iconbitmap(True, self.logo_ico)
+        self.iconbitmap(self.logo_ico)
         # self.config(bg="#000000")
 
         # create left-side navigation
@@ -625,21 +625,6 @@ class App(ctk.CTk):
     def error_handler(self, error):
         messagebox.showerror(title = "YatoDownloader", message = "Error {}".format(error))
 
-
-    # https://stackoverflow.com/questions/42422139/how-to-easily-avoid-tkinter-freezing
-
-    # self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, text=" video", compound="left")
-    # self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
-    # self.read_image_from_url(YouTube("https://www.youtube.com/watch?v=_NURmDlK0OE&ab_channel=AirRemix").thumbnail_url, self.home_frame_large_image_label)
-
-    # playlist = Playlist("https://www.youtube.com/playlist?list=PL2rTmCt6YI5VuZt0-CevRpQdeSim_j-BE")
-    # for urls in playlist.video_urls:
-    #     # check widget in home_frame
-    #     temp_grid = len(self.home_frame.winfo_children())
-    #     temp_widget = ctk.CTkLabel(self.home_frame, text="video", compound="left")
-    #     temp_widget.grid(row=temp_grid, column=0, padx=20, pady=10)
-    #     YouTube(urls).thumbnail_url
-    #     self.read_image_from_url(YouTube(urls).thumbnail_url, temp_widget)
 
 if __name__ == "__main__":
     app = App()
