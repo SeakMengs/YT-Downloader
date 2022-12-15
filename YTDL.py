@@ -298,12 +298,6 @@ class App(ctk.CTk):
         # Elegant way to check to write less code :)
         return req.status_code == 200
 
-        #**********************************************************************************************************************************
-        # How to validate a Youtube video & playlist url until they completely match or has a redirect to the video or playlist in Python?
-        
-        # Current issue :(
-
-        #**********************************************************************************************************************************
 
     def video_event(self, url):
         self.status_label.configure(text="Status: getting quality options, thumbnail :)")
