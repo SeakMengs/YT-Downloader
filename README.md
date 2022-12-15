@@ -17,7 +17,7 @@ cd to folder project and compile YTDL.py or YTDLConsole.py
 pip install pyinstaller <br>
 <br>
 cd to project folder <br><br>
-for gui version <br>
+for console version <br>
 <!-- pyinstaller --console -–add-binary ffmpeg.exe;. --onefile -i logo.ico YTDLConsole.py -->
 pyinstaller --console --onefile -i logo.ico YTDLConsole.py
 <br><br>
