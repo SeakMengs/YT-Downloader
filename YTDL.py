@@ -619,9 +619,6 @@ class App(ctk.CTk):
         self.status_label.configure(text="Status: {}% {}MB/{}MB | {}".format(download_progress_percentage, download_progress_mb, download_file_size_mb, self.yt_video.title))
 
 
-
-#* Functions to protect the application ------------------------------------------------------------------------------------------------------------------------------------------
-
     def set_app_middle_screen(self):
         # set screen to middle every time the app start
         self.screenX = (int(self.winfo_screenwidth()) / 2 - int(self.winfo_reqwidth()) / 2)
@@ -635,4 +632,5 @@ class App(ctk.CTk):
 
 if __name__ == "__main__":
     app = App()
+    app.set_app_middle_screen()
     app.mainloop()
