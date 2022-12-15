@@ -11,7 +11,7 @@ rm ffmpeg.exe <br>
 sudo apt install ffmpeg
 
 # How to get?
-cd to folder project and compile YTDL.py or YTDLConsole.py
+cd to folder project and compile YTDL.py for GUI version or YTDLConsole.py for command-line version (command-lnie is not updated)
 
 # How to convert python file to exe for console version
 pip install pyinstaller <br>
