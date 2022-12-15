@@ -25,4 +25,10 @@ for gui version <br>
 https://github.com/TomSchimansky/CustomTkinter/wiki/Packaging <br>
 pyinstaller --noconfirm --onedir --windowed --noconsole --add-data "CustomTkinter Location/customtkinter;customtkinter/" -i download.ico "ytdl.py"
 
-then add "Assets folder and ffmpeg to the folder that has exe"
+then add "Assets folder and ffmpeg to the folder that has exe" <br>
+
+# Preview with light and dark mode
+![image](https://user-images.githubusercontent.com/54373229/207796577-504f1356-0310-4880-a137-0aa29659dd12.png)
+<br>
+![image](https://user-images.githubusercontent.com/54373229/207796631-1ad9b2a7-fbb5-4097-8ea1-57b11911987a.png)
+
